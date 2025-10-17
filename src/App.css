@@ -1,0 +1,162 @@
+.App {
+  text-align: center;
+}
+
+/* --- ESTILOS DO NOVO CABEÇALHO --- */
+.App-header {
+  background-color: #ffffff;
+  padding: 15px 30px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+
+.header-logo {
+  max-width: 120px; /* Ajustado para um tamanho elegante */
+  height: auto;
+  margin-right: 20px;
+}
+
+.header-title-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #1a237e; /* Um tom de azul escuro */
+  font-weight: 600;
+}
+
+.header-subtitle {
+  font-size: 1rem;
+  margin: 0;
+  color: #555;
+  font-weight: 400;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-icon {
+  color: #555;
+  cursor: pointer;
+  margin-left: 20px;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-icon:hover {
+  color: #1a237e;
+}
+
+.nav-icon svg { /* Alvo para o ícone em si */
+  font-size: 2.2rem; /* Tamanho do ícone */
+}
+
+/* --- FIM DOS ESTILOS DO CABEÇALHO --- */
+
+
+main {
+  padding: 0 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.emenda-form {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 48%;
+  margin-bottom: 1rem;
+}
+
+.form-group.form-group-full {
+  flex-basis: 100%;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #444;
+}
+
+/* --- DESTAQUE PARA O CAMPO NOME --- */
+.form-group.form-group-full label {
+    font-size: 1.1rem;
+}
+
+.form-group.form-group-full input[name="nome_proponente"] {
+  font-size: 1.4rem; /* Texto ainda maior */
+  padding: 14px;
+  border-color: #1a237e; /* Borda com a cor principal */
+  border-width: 2px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button[type="submit"] {
+  background-color: #1a237e;
+  color: white;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button[type="submit"]:hover {
+  background-color: #283593;
+}
+
+.form-message {
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
