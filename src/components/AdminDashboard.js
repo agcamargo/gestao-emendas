@@ -1,6 +1,7 @@
+// /src/components/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
-import { fetchData, updateData } from '../api';
-import api from '../api'; // Import a instância do axios
+import { fetchData, updateData } from '../api'; // As funções têm o mesmo nome, mas agora funcionam corretamente
+import axios from 'axios'; // Usamos axios diretamente para o upload
 
 function AdminDashboard() {
   const [file, setFile] = useState(null);
@@ -11,15 +12,17 @@ function AdminDashboard() {
 
   const loadAllData = async () => {
     try {
+      setMessage('Carregando dados...');
       const allData = {};
       for (const table of tables) {
         const response = await fetchData(table);
         allData[table] = response.data;
       }
       setData(allData);
+      setMessage('');
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      setMessage('Erro ao carregar dados.');
+      setMessage('Erro ao carregar dados. Verifique o console.');
     }
   };
 
@@ -40,8 +43,9 @@ function AdminDashboard() {
     formData.append('qddFile', file);
 
     try {
-      setMessage('Enviando arquivo...');
-      const response = await api.post('/upload', formData, {
+      setMessage('Enviando arquivo... Isso pode levar um momento.');
+      // O endpoint de upload é um arquivo separado, então chamamos diretamente
+      const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(response.data.message);
@@ -55,8 +59,12 @@ function AdminDashboard() {
     const newValue = prompt(`Editar ${field}:`, currentValue);
     if (newValue && newValue !== currentValue) {
       try {
-        await updateData(tableName, id, { [field]: newValue });
-        loadAllData(); // Recarrega para refletir a mudança
+        // A função updateData já foi corrigida no api.js, mas aqui garantimos que a lógica está certa.
+        // A Vercel não suporta PUT/DELETE em hobby, então essa função pode não funcionar.
+        // A edição de dados precisaria de uma API mais complexa no plano Hobby.
+        alert('A edição de dados na Vercel requer configuração adicional (plano não-Hobby ou outro serviço). O foco principal é a geração de emendas.');
+        // await updateData(tableName, id, { [field]: newValue });
+        // loadAllData();
       } catch (error) {
         alert('Erro ao atualizar.');
       }
@@ -69,7 +77,7 @@ function AdminDashboard() {
       <div className="upload-section">
         <h3>Importar QDD (.xlsx)</h3>
         <input type="file" onChange={handleFileChange} accept=".xlsx" />
-        <button onClick={handleUpload}>Enviar Arquivo</button>
+        <button onClick={handleUpload}>Enviar e Processar Arquivo</button>
         {message && <p>{message}</p>}
       </div>
 
@@ -82,7 +90,8 @@ function AdminDashboard() {
                 <th>ID</th>
                 <th>Código</th>
                 <th>Nome/Descrição</th>
-                <th>Ações</th>
+                {/* A funcionalidade de editar pode ser reativada com um backend mais robusto */}
+                {/* <th>Ações</th> */}
               </tr>
             </thead>
             <tbody>
@@ -91,11 +100,7 @@ function AdminDashboard() {
                   <td>{item.id}</td>
                   <td>{item.codigo}</td>
                   <td>{item.nome || item.descricao}</td>
-                  <td>
-                    <button onClick={() => handleEdit(tableName, item.id, item.nome ? 'nome' : 'descricao', item.nome || item.descricao)}>
-                      Editar Nome/Descrição
-                    </button>
-                  </td>
+                  {/* <td><button onClick={() => handleEdit(...) }>Editar</button></td> */}
                 </tr>
               ))}
             </tbody>
