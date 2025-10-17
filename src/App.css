@@ -2,7 +2,6 @@
   text-align: center;
 }
 
-/* --- ESTILOS DO NOVO CABEÇALHO --- */
 .App-header {
   background-color: #ffffff;
   padding: 15px 30px;
@@ -21,7 +20,7 @@
 }
 
 .header-logo {
-  max-width: 120px; /* Ajustado para um tamanho elegante */
+  max-width: 120px;
   height: auto;
   margin-right: 20px;
 }
@@ -34,7 +33,7 @@
 .header-title {
   font-size: 1.5rem;
   margin: 0;
-  color: #1a237e; /* Um tom de azul escuro */
+  color: #1a237e;
   font-weight: 600;
 }
 
@@ -45,10 +44,27 @@
   font-weight: 400;
 }
 
+/* --- NOVAS REGRAS DE ESTILO ADICIONADAS ABAIXO --- */
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Alinha os ícones e o texto à direita */
+}
+
 .header-nav {
   display: flex;
   align-items: center;
 }
+
+.header-credit {
+  margin: 5px 0 0 0; /* Adiciona um pequeno espaço acima do texto */
+  font-size: 0.75rem; /* Letra pequena */
+  color: #777; /* Cor cinza, discreta */
+  font-style: italic;
+}
+
+/* --- FIM DAS NOVAS REGRAS --- */
 
 .nav-icon {
   color: #555;
@@ -61,12 +77,9 @@
   color: #1a237e;
 }
 
-.nav-icon svg { /* Alvo para o ícone em si */
-  font-size: 2.2rem; /* Tamanho do ícone */
+.nav-icon svg {
+  font-size: 2.2rem;
 }
-
-/* --- FIM DOS ESTILOS DO CABEÇALHO --- */
-
 
 main {
   padding: 0 2rem;
@@ -102,15 +115,14 @@ main {
   color: #444;
 }
 
-/* --- DESTAQUE PARA O CAMPO NOME --- */
 .form-group.form-group-full label {
     font-size: 1.1rem;
 }
 
 .form-group.form-group-full input[name="nome_proponente"] {
-  font-size: 1.4rem; /* Texto ainda maior */
+  font-size: 1.4rem;
   padding: 14px;
-  border-color: #1a237e; /* Borda com a cor principal */
+  border-color: #1a237e;
   border-width: 2px;
 }
 

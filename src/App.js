@@ -3,16 +3,12 @@ import './App.css';
 import AdminDashboard from './components/AdminDashboard';
 import EmendaForm from './components/EmendaForm';
 
-// Importa o brasão da pasta assets
 import brasao from './assets/Brasão Ibiúna.png'; 
-
-// Importa os ícones que vamos usar
 import HomeIcon from '@mui/icons-material/Home';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
-
 function App() {
-  const [view, setView] = useState('emenda'); // 'admin' or 'emenda'
+  const [view, setView] = useState('emenda');
 
   return (
     <div className="App">
@@ -24,15 +20,22 @@ function App() {
             <h2 className="header-subtitle">Gerador de Emenda Impositiva</h2>
           </div>
         </div>
-        <nav className="header-nav">
-          <div className="nav-icon" onClick={() => setView('emenda')} title="Criar Emenda (Home)">
-            <HomeIcon />
-          </div>
-          <div className="nav-icon" onClick={() => setView('admin')} title="Administração">
-            <AdminPanelSettingsIcon />
-          </div>
-        </nav>
+
+        {/* --- NOVO CONTAINER PARA OS ITENS DA DIREITA --- */}
+        <div className="header-right">
+          <nav className="header-nav">
+            <div className="nav-icon" onClick={() => setView('emenda')} title="Criar Emenda (Home)">
+              <HomeIcon />
+            </div>
+            <div className="nav-icon" onClick={() => setView('admin')} title="Administração">
+              <AdminPanelSettingsIcon />
+            </div>
+          </nav>
+          {/* --- TEXTO DE CRÉDITO ADICIONADO AQUI --- */}
+          <p className="header-credit">Desenvolvido por: Marcos Camargo</p>
+        </div>
       </header>
+
       <main>
         {view === 'admin' ? <AdminDashboard /> : <EmendaForm />}
       </main>
