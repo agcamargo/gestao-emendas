@@ -3,19 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 import xlsx from 'xlsx';
 import { formidable } from 'formidable';
 
-// Configuração do Supabase (use as variáveis de ambiente da Vercel)
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-
-// Desabilita o bodyParser padrão da Vercel para que o formidable possa lidar com o upload
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
-
+export const config = { api: { bodyParser: false } };
 const getCellValue = (row, key) => (row[key] ? String(row[key]).trim() : null);
 
 export default async function handler(req, res) {
+    // --- CORREÇÃO APLICADA AQUI ---
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    // --- FIM DA CORREÇÃO ---
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -24,22 +19,19 @@ export default async function handler(req, res) {
         const form = formidable({});
         const [fields, files] = await form.parse(req);
         const qddFile = files.qddFile[0];
-
-        if (!qddFile) {
-            return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-        }
         
-        // Lê o arquivo que foi enviado
+        if (!qddFile) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+        
         const workbook = xlsx.readFile(qddFile.filepath);
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(sheet);
         
-        // Limpa a tabela de despesas para reconstruir o mapa
         await supabase.from('despesas').delete().neq('id', 0);
 
         let currentOrgao, currentUnidade;
         for (const row of data) {
+            // A lógica de importação continua a mesma
             const orgaoUnidadeCodigo = getCellValue(row, 'Órgão Un. Orc/Exec');
             const descricaoGeral = getCellValue(row, 'Descrição');
             const fspCode = getCellValue(row, 'Func/Sub/Prog Proj/Atividade');
@@ -69,9 +61,8 @@ export default async function handler(req, res) {
                 await supabase.from('categorias').upsert({ codigo: codigoCategoria, nome: nomeCategoria, descricao: nomeCategoria }, { onConflict: 'codigo' });
             }
         }
-        res.status(200).json({ message: 'Arquivo processado e relações importadas com sucesso!' });
+        res.status(200).json({ message: 'Arquivo processado com sucesso!' });
     } catch (error) {
-        console.error('Erro no upload:', error);
         res.status(500).json({ error: 'Falha ao processar o arquivo.', details: error.message });
     }
 }
