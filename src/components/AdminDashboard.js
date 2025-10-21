@@ -1,16 +1,21 @@
 // /src/components/AdminDashboard.js
-import React, { useState, useEffect } from 'react';
-import { fetchData, updateData } from '../api'; // As funções têm o mesmo nome, mas agora funcionam corretamente
-import axios from 'axios'; // Usamos axios diretamente para o upload
+import React, { useState, useEffect, useCallback } from 'react'; // 1. Importe useCallback
+import { fetchData, updateData } from '../api';
+import axios from 'axios';
 
 function AdminDashboard() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
-  const [data, setData] = useState({ orgaos: [], unidades: [], funcoes: [], subfuncoes: [], programas: [], categorias: [] });
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const tables = ['orgaos', 'unidades', 'funcoes', 'subfuncoes', 'programas', 'categorias'];
+  const tables = ['orgaos', 'unidades', 'funcoes', 'subfuncoes', 'programas', 'atividades', 'categorias'];
 
-  const loadAllData = async () => {
+  const [data, setData] = useState(
+    tables.reduce((acc, table) => ({ ...acc, [table]: [] }), {})
+  );
+
+  // 2. Envolva a função 'loadAllData' em useCallback
+  const loadAllData = useCallback(async () => {
     try {
       setMessage('Carregando dados...');
       const allData = {};
@@ -24,11 +29,11 @@ function AdminDashboard() {
       console.error('Erro ao carregar dados:', error);
       setMessage('Erro ao carregar dados. Verifique o console.');
     }
-  };
+  }, []); // O array de dependências vazio significa que esta função nunca será recriada
 
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [loadAllData]); // 3. Adicione 'loadAllData' ao array de dependências do useEffect
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -44,41 +49,45 @@ function AdminDashboard() {
 
     try {
       setMessage('Enviando arquivo... Isso pode levar um momento.');
-      // O endpoint de upload é um arquivo separado, então chamamos diretamente
       const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(response.data.message);
-      loadAllData(); // Recarrega os dados após o upload
+      await loadAllData(); // Chama a função "memoizada"
     } catch (error) {
       setMessage('Erro no upload: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleEdit = async (tableName, id, field, currentValue) => {
-    const newValue = prompt(`Editar ${field}:`, currentValue);
+    const newValue = prompt(`Editar ${field} para:`, currentValue);
+
     if (newValue && newValue !== currentValue) {
+      setIsUpdating(true);
+      setMessage('Atualizando...');
       try {
-        // A função updateData já foi corrigida no api.js, mas aqui garantimos que a lógica está certa.
-        // A Vercel não suporta PUT/DELETE em hobby, então essa função pode não funcionar.
-        // A edição de dados precisaria de uma API mais complexa no plano Hobby.
-        alert('A edição de dados na Vercel requer configuração adicional (plano não-Hobby ou outro serviço). O foco principal é a geração de emendas.');
-        // await updateData(tableName, id, { [field]: newValue });
-        // loadAllData();
+        await updateData(tableName, id, { [field]: newValue });
+        setMessage('Atualizado com sucesso! Recarregando dados...');
+        await loadAllData(); // Chama a função "memoizada"
+        setMessage('Dados recarregados.');
       } catch (error) {
-        alert('Erro ao atualizar.');
+        console.error('Erro ao atualizar:', error);
+        setMessage(`Falha ao atualizar: ${error.message || 'Erro desconhecido'}`);
+      } finally {
+        setIsUpdating(false);
       }
     }
   };
 
+  // ... (o JSX permanece o mesmo)
   return (
     <div>
       <h2>Área Administrativa</h2>
       <div className="upload-section">
         <h3>Importar QDD (.xlsx)</h3>
         <input type="file" onChange={handleFileChange} accept=".xlsx" />
-        <button onClick={handleUpload}>Enviar e Processar Arquivo</button>
-        {message && <p>{message}</p>}
+        <button onClick={handleUpload} disabled={isUpdating}>Enviar e Processar Arquivo</button>
+        {message && <p className="form-message">{message}</p>}
       </div>
 
       {tables.map(tableName => (
@@ -86,23 +95,24 @@ function AdminDashboard() {
           <h3>Tabela: {tableName.charAt(0).toUpperCase() + tableName.slice(1)}</h3>
           <table>
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Código</th>
-                <th>Nome/Descrição</th>
-                {/* A funcionalidade de editar pode ser reativada com um backend mais robusto */}
-                {/* <th>Ações</th> */}
-              </tr>
+              <tr><th>ID</th><th>Código</th><th>Nome/Descrição</th><th>Ações</th></tr>
             </thead>
             <tbody>
-              {data[tableName]?.map(item => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.codigo}</td>
-                  <td>{item.nome || item.descricao}</td>
-                  {/* <td><button onClick={() => handleEdit(...) }>Editar</button></td> */}
-                </tr>
-              ))}
+              {data[tableName]?.map(item => {
+                const fieldToEdit = item.nome ? 'nome' : 'descricao';
+                const valueToEdit = item.nome || item.descricao || '';
+                return (
+                  <tr key={item.id}><td>{item.id}</td><td>{item.codigo}</td><td>{valueToEdit}</td><td>
+                      <button
+                        onClick={() => handleEdit(tableName, item.id, fieldToEdit, valueToEdit)}
+                        className="edit-button"
+                        disabled={isUpdating}
+                      >
+                        Editar
+                      </button>
+                    </td></tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

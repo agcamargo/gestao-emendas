@@ -1,20 +1,58 @@
 // /src/api.js
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: '/api',
-});
+/**
+ * Busca dados genéricos (tabelas completas).
+ * Chama: GET /api/tables?name=<tableName>
+ */
+export const fetchData = (tableName) => {
+    return axios.get(`/api/tables?name=${tableName}`);
+};
 
-// --- CORREÇÃO APLICADA AQUI ---
-// Agora todas as chamadas apontam para o nosso endpoint 'tables' com os parâmetros corretos.
+/**
+ * Busca Funções filtradas por um ID de Unidade.
+ * Chama: GET /api/tables?unidadeId=<unidadeId>
+ */
+export const fetchFuncoesPorUnidade = (unidadeId) => {
+    return axios.get(`/api/tables?unidadeId=${unidadeId}`);
+};
 
-export const fetchData = (tableName) => api.get(`/tables?name=${tableName}`);
+/**
+ * CORRIGIDO: Busca Subfunções E Programas filtrados por Unidade E Função.
+ * Chama: GET /api/tables?unidadeId=...&funcaoId=...
+ */
+export const fetchSubgruposPorFuncao = (unidadeId, funcaoId) => {
+    // Agora passa ambos os IDs para o backend
+    return axios.get(`/api/tables?unidadeId=${unidadeId}&funcaoId=${funcaoId}`);
+};
 
-export const fetchFuncoesPorUnidade = (unidadeId) => api.get(`/tables?unidadeId=${unidadeId}`);
+/**
+ * CORRIGIDO: Busca Atividades filtradas por Unidade, Função E Programa.
+ * Chama: GET /api/tables?unidadeId=...&funcaoId=...&programaId=...
+ */
+export const fetchAtividadesPorPrograma = (unidadeId, funcaoId, programaId) => {
+    // Agora passa todos os IDs da cadeia
+    return axios.get(`/api/tables?unidadeId=${unidadeId}&funcaoId=${funcaoId}&programaId=${programaId}`);
+};
 
-export const fetchSubgruposPorFuncao = (unidadeId, funcaoId) => api.get(`/tables?unidadeId=${unidadeId}&funcaoId=${funcaoId}`);
+/**
+ * Atualiza um registro.
+ * Chama: PUT /api/tables?name=<tableName>&id=<id>
+ */
+export const updateData = (tableName, id, data) => {
+    return axios.put(`/api/tables?name=${tableName}&id=${id}`, data);
+};
 
-// A função de update permanece, embora não seja usada no formulário principal.
-export const updateData = (tableName, id, data) => api.put(`/tables?name=${tableName}&id=${id}`, data);
-
-export default api;
+/**
+ * Busca o valor de uma dotação específica com base em todos os IDs.
+ * Chama: GET /api/tables?unidadeId=...&funcaoId=...&programaId=...&atividadeId=...&categoriaId=...
+ */
+export const fetchValorDotacao = (ids) => {
+    const { unidadeId, funcaoId, programaId, atividadeId, categoriaId } = ids;
+    
+    if (!unidadeId || !funcaoId || !programaId || !atividadeId || !categoriaId) {
+        return Promise.resolve({ data: { valor: null } }); 
+    }
+    
+    return axios.get(`/api/tables?unidadeId=${unidadeId}&funcaoId=${funcaoId}&programaId=${programaId}&atividadeId=${atividadeId}&categoriaId=${categoriaId}`);
+};

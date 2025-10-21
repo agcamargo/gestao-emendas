@@ -172,3 +172,118 @@ th, td {
 th {
   background-color: #f2f2f2;
 }
+/* --- ESTILOS PARA O SELETOR DE TIPO DE EMENDA --- */
+.view-selector {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Espaço entre os botões */
+}
+
+.view-selector button {
+  padding: 12px 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 2px solid #1a237e; /* Borda na cor principal */
+  background-color: #f4f4f4;
+  color: #1a237e;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.view-selector button:hover {
+  background-color: #e0e0e0;
+}
+
+.view-selector button.active {
+  background-color: #1a237e; /* Cor principal quando ativo */
+  color: #ffffff;
+}
+/* --- ESTILO PARA O BOTÃO DE EDIÇÃO --- */
+.edit-button {
+  background-color: #f0d5a1;
+  color: #333;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  width: auto; /* Permite que o botão seja menor */
+}
+
+.edit-button:hover {
+  background-color: #e0e0e0;
+}
+/* Adicionar ao final de /src/App.css */
+.dotacao-quadro {
+  border: 1px solid #eee;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: flex; /* Para alinhar os selects */
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.acrescimo-quadro {
+    border: 1px dashed #ccc;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    position: relative;
+    background-color: #fff;
+}
+
+.acrescimo-quadro h4 {
+    margin-top: 0;
+    color: #1a237e;
+}
+
+.remove-button {
+    background-color: #f44336; /* Red */
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: auto;
+    float: right; /* Posiciona à direita */
+}
+
+.remove-button:hover {
+    background-color: #d32f2f;
+}
+
+.valor-info {
+  background-color: #e3f2fd;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-size: 0.9em;
+  width: 100%; /* Ocupa a linha toda */
+  box-sizing: border-box;
+}
+
+.loading-message {
+    font-style: italic;
+    color: #777;
+}
+
+.form-message.error {
+    color: #d32f2f; /* Red for errors */
+    font-weight: bold;
+}
+
+.valor-negativo {
+    color: #d32f2f; /* Red for negative remaining value */
+    font-weight: bold;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 1.5rem 0;
+    width: 100%;
+}

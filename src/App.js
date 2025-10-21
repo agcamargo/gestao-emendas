@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import './App.css';
-import AdminDashboard from './components/AdminDashboard';
 import EmendaForm from './components/EmendaForm';
+import EmendaModificativaForm from './components/EmendaModificativaForm'; // Novo
+import AdminDashboard from './components/AdminDashboard';
 
+// Importações de ícones e logo
 import brasao from './assets/Brasão Ibiúna.png'; 
 import HomeIcon from '@mui/icons-material/Home';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 function App() {
-  const [view, setView] = useState('emenda');
+  // 'impositiva' será nossa "home"
+  const [view, setView] = useState('impositiva'); // impositiva, modificativa, admin
 
   return (
     <div className="App">
+      {/* --- CABEÇALHO COMPLETO RESTAURADO --- */}
       <header className="App-header">
         <div className="header-left">
           <img src={brasao} alt="Brasão de Ibiúna" className="header-logo" />
@@ -20,24 +24,44 @@ function App() {
             <h2 className="header-subtitle">Gerador de Emenda Impositiva</h2>
           </div>
         </div>
-
-        {/* --- NOVO CONTAINER PARA OS ITENS DA DIREITA --- */}
         <div className="header-right">
           <nav className="header-nav">
-            <div className="nav-icon" onClick={() => setView('emenda')} title="Criar Emenda (Home)">
+            {/* O ícone Home agora aponta para a view 'impositiva' */}
+            <div className="nav-icon" onClick={() => setView('impositiva')} title="Criar Emenda (Home)">
               <HomeIcon />
             </div>
             <div className="nav-icon" onClick={() => setView('admin')} title="Administração">
               <AdminPanelSettingsIcon />
             </div>
           </nav>
-          {/* --- TEXTO DE CRÉDITO ADICIONADO AQUI --- */}
           <p className="header-credit">Desenvolvido por: Marcos Camargo</p>
         </div>
       </header>
+      {/* --- FIM DO CABEÇALHO --- */}
 
       <main>
-        {view === 'admin' ? <AdminDashboard /> : <EmendaForm />}
+        {/* Se a view NÃO for 'admin', mostra os botões de seleção de emenda */}
+        {view !== 'admin' && (
+          <div className="view-selector">
+            <button 
+              onClick={() => setView('impositiva')} 
+              className={view === 'impositiva' ? 'active' : ''}
+            >
+              Emenda Impositiva
+            </button>
+            <button 
+              onClick={() => setView('modificativa')} 
+              className={view === 'modificativa' ? 'active' : ''}
+            >
+              Emenda Modificativa
+            </button>
+          </div>
+        )}
+
+        {/* Renderização condicional das três visualizações */}
+        {view === 'admin' && <AdminDashboard />}
+        {view === 'impositiva' && <EmendaForm />}
+        {view === 'modificativa' && <EmendaModificativaForm />}
       </main>
     </div>
   );
