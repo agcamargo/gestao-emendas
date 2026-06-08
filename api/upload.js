@@ -4,10 +4,29 @@ import xlsx from 'xlsx';
 import { formidable } from 'formidable';
 
 export const config = { api: { bodyParser: false } };
+
 const getCellValue = (row, key) => (row[key] ? String(row[key]).trim() : null);
 
+function getSupabaseClient() {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!url || !key) {
+        throw new Error(`Variáveis de ambiente ausentes. SUPABASE_URL: ${url ? 'OK' : 'FALTANDO'}, SUPABASE_SERVICE_KEY: ${key ? 'OK' : 'FALTANDO'}`);
+    }
+
+    return createClient(url.trim(), key.trim());
+}
+
 export default async function handler(req, res) {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    let supabase;
+    try {
+        supabase = getSupabaseClient();
+    } catch (configError) {
+        console.error('Erro de configuração:', configError.message);
+        return res.status(500).json({ error: 'Erro de configuração do servidor.', details: configError.message });
+    }
+
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     try {
@@ -21,10 +40,9 @@ export default async function handler(req, res) {
         const sheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(sheet);
 
-        await supabase.from('despesas').delete().neq('id', 0); // Limpa relações
+        await supabase.from('despesas').delete().neq('id', 0);
 
         let currentOrgao = null, currentUnidade = null;
-        // Cache para evitar buscas repetidas no banco
         const cacheIds = { orgaos: {}, unidades: {}, funcoes: {}, subfuncoes: {}, programas: {}, atividades: {}, categorias: {} };
 
         for (const row of data) {
@@ -32,36 +50,33 @@ export default async function handler(req, res) {
             const descricaoGeral = getCellValue(row, 'Descrição');
             const fspCode = getCellValue(row, 'Func/Sub/Prog Proj/Atividade');
             const valorDotacaoStr = getCellValue(row, 'Vl. Dotação');
-            const valorDotacao = valorDotacaoStr ? parseFloat(String(valorDotacaoStr).replace('.', '').replace(',', '.')) : null; // Trata '.' como milhar e ',' como decimal
+            const valorDotacao = valorDotacaoStr ? parseFloat(String(valorDotacaoStr).replace('.', '').replace(',', '.')) : null;
             const codigoCategoria = getCellValue(row, 'Categoria Elemento');
-            // A descrição da Categoria está na coluna 'Descrição' quando 'Categoria Elemento' está preenchido
             const nomeCategoria = codigoCategoria ? descricaoGeral : null;
 
             let orgaoId = currentOrgao?.id, unidadeId = currentUnidade?.id;
             let funcaoId, subfuncaoId, programaId, atividadeId, categoriaId;
 
-            // --- Processa Órgão/Unidade ---
             if (orgaoUnidadeCodigo && descricaoGeral) {
-                if (orgaoUnidadeCodigo.length <= 2) { // É Órgão
+                if (orgaoUnidadeCodigo.length <= 2) {
                     if (!cacheIds.orgaos[orgaoUnidadeCodigo]) {
                         const { data: orgao, error } = await supabase.from('orgaos').upsert({ codigo: orgaoUnidadeCodigo, nome: descricaoGeral }, { onConflict: 'codigo' }).select('id').single();
                         if (error) throw new Error(`Erro ao salvar órgão ${orgaoUnidadeCodigo}: ${error.message}`);
                         cacheIds.orgaos[orgaoUnidadeCodigo] = orgao.id;
                     }
                     orgaoId = cacheIds.orgaos[orgaoUnidadeCodigo];
-                    currentOrgao = { id: orgaoId }; // Atualiza o órgão atual
-                } else if (orgaoUnidadeCodigo.includes('.')) { // É Unidade
+                    currentOrgao = { id: orgaoId };
+                } else if (orgaoUnidadeCodigo.includes('.')) {
                     if (!cacheIds.unidades[orgaoUnidadeCodigo]) {
                         const { data: unidade, error } = await supabase.from('unidades').upsert({ codigo: orgaoUnidadeCodigo, nome: descricaoGeral }, { onConflict: 'codigo' }).select('id').single();
                         if (error) throw new Error(`Erro ao salvar unidade ${orgaoUnidadeCodigo}: ${error.message}`);
                         cacheIds.unidades[orgaoUnidadeCodigo] = unidade.id;
                     }
                     unidadeId = cacheIds.unidades[orgaoUnidadeCodigo];
-                    currentUnidade = { id: unidadeId }; // Atualiza a unidade atual
+                    currentUnidade = { id: unidadeId };
                 }
             }
 
-            // --- Processa Categoria (ocorre em linhas separadas ou junto com FSP) ---
             if (codigoCategoria && codigoCategoria.includes('.') && nomeCategoria) {
                 if (!cacheIds.categorias[codigoCategoria]) {
                     const { data: cat, error } = await supabase.from('categorias').upsert({ codigo: codigoCategoria, nome: nomeCategoria, descricao: nomeCategoria }, { onConflict: 'codigo' }).select('id').single();
@@ -71,12 +86,10 @@ export default async function handler(req, res) {
                 categoriaId = cacheIds.categorias[codigoCategoria];
             }
 
-            // --- Processa a linha de despesa completa (FSP + Categoria + Valor) ---
             if (fspCode && fspCode.split('.').length === 4 && currentUnidade && valorDotacao !== null && categoriaId) {
                 const parts = fspCode.split('.');
                 const [funcCode, subFuncCode, progCode, ativCode] = parts;
 
-                // Garante que todos os níveis da classificação existem e pega os IDs
                 if (!cacheIds.funcoes[funcCode]) {
                     const { data: f } = await supabase.from('funcoes').upsert({ codigo: funcCode, nome: `Função ${funcCode}` }, { onConflict: 'codigo' }).select('id').single();
                     cacheIds.funcoes[funcCode] = f.id;
@@ -101,10 +114,9 @@ export default async function handler(req, res) {
                 }
                 atividadeId = cacheIds.atividades[ativCode];
 
-                // Insere na tabela 'despesas' se todos os IDs foram encontrados/criados
                 if (unidadeId && funcaoId && subfuncaoId && programaId && atividadeId && categoriaId) {
                     const { error: insertError } = await supabase.from('despesas').insert({
-                        orgao_id: orgaoId, // Pode ser nulo se a linha da unidade veio antes
+                        orgao_id: orgaoId,
                         unidade_id: unidadeId,
                         funcao_id: funcaoId,
                         subfuncao_id: subfuncaoId,
@@ -113,9 +125,9 @@ export default async function handler(req, res) {
                         categoria_id: categoriaId,
                         valor: valorDotacao
                     });
-                     if (insertError) console.error("Erro ao inserir despesa:", insertError.message, {fspCode, codigoCategoria, valorDotacao});
+                    if (insertError) console.error("Erro ao inserir despesa:", insertError.message, { fspCode, codigoCategoria, valorDotacao });
                 } else {
-                     console.warn("Skipping despesa row due to missing ID(s):", {fspCode, codigoCategoria, unidadeId, funcaoId, subfuncaoId, programaId, atividadeId, categoriaId});
+                    console.warn("Skipping despesa row due to missing ID(s):", { fspCode, codigoCategoria, unidadeId, funcaoId, subfuncaoId, programaId, atividadeId, categoriaId });
                 }
             }
         }
