@@ -1,25 +1,26 @@
 // /src/components/AdminDashboard.js
-import React, { useState, useEffect, useCallback } from 'react'; // 1. Importe useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchData, updateData } from '../api';
 import axios from 'axios';
+
+// Definido fora do componente para não ser recriado a cada render
+// Isso resolve o warning: "useCallback has a missing dependency: 'tables'"
+const TABLES = ['orgaos', 'unidades', 'funcoes', 'subfuncoes', 'programas', 'atividades', 'categorias'];
 
 function AdminDashboard() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const tables = ['orgaos', 'unidades', 'funcoes', 'subfuncoes', 'programas', 'atividades', 'categorias'];
-
   const [data, setData] = useState(
-    tables.reduce((acc, table) => ({ ...acc, [table]: [] }), {})
+    TABLES.reduce((acc, table) => ({ ...acc, [table]: [] }), {})
   );
 
-  // 2. Envolva a função 'loadAllData' em useCallback
   const loadAllData = useCallback(async () => {
     try {
       setMessage('Carregando dados...');
       const allData = {};
-      for (const table of tables) {
+      for (const table of TABLES) {
         const response = await fetchData(table);
         allData[table] = response.data;
       }
@@ -29,11 +30,11 @@ function AdminDashboard() {
       console.error('Erro ao carregar dados:', error);
       setMessage('Erro ao carregar dados. Verifique o console.');
     }
-  }, []); // O array de dependências vazio significa que esta função nunca será recriada
+  }, []); // Array vazio é seguro agora pois TABLES é constante externa
 
   useEffect(() => {
     loadAllData();
-  }, [loadAllData]); // 3. Adicione 'loadAllData' ao array de dependências do useEffect
+  }, [loadAllData]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -53,7 +54,7 @@ function AdminDashboard() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(response.data.message);
-      await loadAllData(); // Chama a função "memoizada"
+      await loadAllData();
     } catch (error) {
       setMessage('Erro no upload: ' + (error.response?.data?.error || error.message));
     }
@@ -68,7 +69,7 @@ function AdminDashboard() {
       try {
         await updateData(tableName, id, { [field]: newValue });
         setMessage('Atualizado com sucesso! Recarregando dados...');
-        await loadAllData(); // Chama a função "memoizada"
+        await loadAllData();
         setMessage('Dados recarregados.');
       } catch (error) {
         console.error('Erro ao atualizar:', error);
@@ -79,7 +80,6 @@ function AdminDashboard() {
     }
   };
 
-  // ... (o JSX permanece o mesmo)
   return (
     <div>
       <h2>Área Administrativa</h2>
@@ -90,7 +90,7 @@ function AdminDashboard() {
         {message && <p className="form-message">{message}</p>}
       </div>
 
-      {tables.map(tableName => (
+      {TABLES.map(tableName => (
         <div key={tableName}>
           <h3>Tabela: {tableName.charAt(0).toUpperCase() + tableName.slice(1)}</h3>
           <table>
@@ -102,7 +102,11 @@ function AdminDashboard() {
                 const fieldToEdit = item.nome ? 'nome' : 'descricao';
                 const valueToEdit = item.nome || item.descricao || '';
                 return (
-                  <tr key={item.id}><td>{item.id}</td><td>{item.codigo}</td><td>{valueToEdit}</td><td>
+                  <tr key={item.id}>
+                    <td>{item.id}</td>
+                    <td>{item.codigo}</td>
+                    <td>{valueToEdit}</td>
+                    <td>
                       <button
                         onClick={() => handleEdit(tableName, item.id, fieldToEdit, valueToEdit)}
                         className="edit-button"
@@ -110,7 +114,8 @@ function AdminDashboard() {
                       >
                         Editar
                       </button>
-                    </td></tr>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
